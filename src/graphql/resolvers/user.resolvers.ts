@@ -38,6 +38,8 @@ export const userResolvers = {
       _: any,
       { input }: { input: { username: string; email: string; password: string; role: string } }
     ) => {
+      // NOTE: Cette mutation est dépréciée - Utilisez Firebase Auth via les routes REST
+      // Gardée pour compatibilité avec les anciens clients
       const { username, email, password, role } = input;
 
       // Vérifier si l'utilisateur existe déjà
@@ -57,11 +59,13 @@ export const userResolvers = {
       // Hasher le mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Créer l'utilisateur
+      // Créer l'utilisateur avec un firebaseUid temporaire (pour compatibilité)
       const user = await User.create({
+        firebaseUid: `legacy_${new Types.ObjectId().toString()}`,
         username,
         email,
         password: hashedPassword,
+        emailVerified: false,
         role,
       });
 
@@ -81,6 +85,8 @@ export const userResolvers = {
       _: any,
       { input }: { input: { email: string; password: string } }
     ) => {
+      // NOTE: Cette mutation est dépréciée - Utilisez Firebase Auth via les routes REST
+      // Gardée pour compatibilité avec les anciens utilisateurs JWT
       const { email, password } = input;
 
       // Trouver l'utilisateur
@@ -88,6 +94,13 @@ export const userResolvers = {
 
       if (!user) {
         throw new AuthenticationError('Email ou mot de passe incorrect');
+      }
+
+      // Vérifier que l'utilisateur a un mot de passe (ancien système JWT)
+      if (!user.password) {
+        throw new AuthenticationError(
+          'Ce compte utilise Firebase Auth. Veuillez vous connecter via l\'application.'
+        );
       }
 
       // Vérifier le mot de passe
