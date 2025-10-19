@@ -1,9 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
+  firebaseUid: string;
   username: string;
   email: string;
-  password: string;
+  password?: string; // Optionnel pour rétrocompatibilité (anciens utilisateurs JWT)
+  emailVerified: boolean;
   role: 'origun' | 'orifan';
   bio?: string;
   avatar?: string;
@@ -14,6 +16,12 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
+    firebaseUid: {
+      type: String,
+      required: [true, 'Firebase UID est requis'],
+      unique: true,
+      index: true
+    },
     username: {
       type: String,
       required: [true, 'Le nom d\'utilisateur est requis'],
@@ -32,8 +40,13 @@ const UserSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, 'Le mot de passe est requis'],
+      required: false, // Optionnel pour Firebase auth
       minlength: [6, 'Le mot de passe doit contenir au moins 6 caractères']
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+      required: true
     },
     role: {
       type: String,
