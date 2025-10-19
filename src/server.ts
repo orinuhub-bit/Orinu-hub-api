@@ -7,9 +7,13 @@ import { connectDB } from './config/database';
 import { typeDefs } from './graphql/typedefs';
 import { resolvers } from './graphql/resolvers';
 import { createContext, GraphQLContext } from './graphql/context';
+import userRoutes from './routes/user.routes';
 
 // Charger les variables d'environnement
 dotenv.config();
+
+// Importer Firebase Admin pour l'initialiser au démarrage
+import './config/firebase-admin';
 
 // Port du serveur
 const PORT = process.env.PORT || 5000;
@@ -45,6 +49,9 @@ const startServer = async (): Promise<void> => {
     );
 
     app.use(express.json());
+
+    // Routes REST API pour Firebase auth
+    app.use('/api/users', userRoutes);
 
     // Monter GraphQL endpoint avec context typé
     app.use(
